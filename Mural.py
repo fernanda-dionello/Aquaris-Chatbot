@@ -3,227 +3,169 @@ import socket
 import threading
 from tkinter import *
 from tkinter import messagebox
- 
-PORT =50007
-SERVER = "localhost"
-ADDRESS = (SERVER, PORT)
- 
-# Create a new client socket
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# client.connect(ADDRESS)
- 
- 
+from tkmacosx import Button
 
 class Mural():
 
     def __init__(self):
-        #Open the Tkinter window
+        
+        # Open the Tkinter window
         self.Window = Tk()
         self.Window.withdraw()
+        self.Window.protocol("WM_DELETE_WINDOW", self.on_closing)
+        
 
-        #Login screen override the current Window
+        # Login screen override the current Window
         self.login = Toplevel()
         self.login.title("Aquaris")
         self.login.resizable(width=False, height=False)
         self.login.configure(width=420,height=200)
+        self.login.protocol("WM_DELETE_WINDOW", self.on_closing)
 
+        ## Login - Place a image in the Login Background 
+        bg = PhotoImage(file = "ocean.png")
+        label1 = Label( self.login, image = bg)
+        label1.place(x = 0, y = 0)
+
+        ## Login - Introduction text title
         self.introduction = Label(self.login,
                 text="Hello! Insert your name to continue:",
                 justify=CENTER,
-                font="Roboto 16 bold")
-        self.introduction.place(relheight=0.15,
-            relx=0.2,
-            rely=0.07)
-        # create a Label
-        self.labelName = Label(self.login,
-                text="Name: ",
-                font="Roboto 12")
+                font="Roboto 16 bold",
+                bg='#fff',
+                fg='black')
 
-        self.labelName.place(relheight=0.2,
-                relx=0.1,
-                rely=0.2)
+        self.introduction.place(relheight=0.15, relx=0.165, rely=0.1)
 
-        # create a entry box for
-        # tyoing the message
-        self.entryName = Entry(self.login,
-                font="Roboto 14",
-                )
-        self.entryName.place(relwidth=0.4,
-                relheight=0.15,
-                relx=0.32,
-                rely=0.35)
-        # set the focus of the cursor
+        ## Login - Input Text
+        self.entryName = Entry(self.login, font="Roboto 14", bg='white', highlightbackground='white', fg='black')
+        self.entryName.place(relwidth=0.4, relheight=0.15, relx=0.30, rely=0.35)
         self.entryName.focus()
-        
+        self.entryName.bind('<Return>', lambda event: self.openChat(self.entryName.get()))
 
-        # create a Continue Button
-        # along with action
+        ## Login - Send Button
         self.go = Button(self.login,
-                text="CONTINUE",
-                font="Helvetica 14 bold",
-                command=lambda: self.goAhead(self.entryName.get()))
+                text="ENTER",
+                font="Roboto 14 bold",
+                bg='white',
+                highlightbackground='white',
+                command=lambda: self.openChat(self.entryName.get()))
 
-        self.go.place(relx=0.4,
-            rely=0.55)
-        
-        # self.rcvLogin = threading.Thread(target=self.receive) 
-        # self.rcvLogin.start()
+        self.go.place(relx=0.390, rely=0.55)
 
-        self.entryName.bind('<Return>', lambda event: self.goAhead(self.entryName.get()))
+        ## Start with server connection off in Login
         self.isConnected = False
-
-        # self.goAhead()
-        self.login.protocol("WM_DELETE_WINDOW", self.on_closing)
-        self.Window.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.PORT = 50007
+        self.SERVER = "localhost"
+        self.ADDRESS = (self.SERVER, self.PORT)
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
         self.Window.mainloop()
-    
-    def on_closing_login(self):
-      if messagebox.askokcancel("Quit", "Do you want to quit?"):
-        client.close()
-        self.login.destroy()
-        self.Window.destroy()
 
+
+    # Close client connection and chat
     def on_closing(self):
       if messagebox.askokcancel("Quit", "Do you want to quit?"):
         if self.isConnected == True:
-            client.send('exit'.encode())
-        client.close()
+            self.client.send('exit'.encode())
+        self.client.close()
         self.Window.destroy()
  
-    def goAhead(self, name):
+    # Close Login window and open the chat
+    def openChat(self, name):
         self.login.destroy()
 
-        client.connect(ADDRESS)
+        # open cliente connection with server
+        self.client.connect(self.ADDRESS)
         self.isConnected = True
 
-        self.layout(name)
- 
-        # the thread to receive messages
+        # shows chat interface
+        self.chat(name)
+
+        # create a Thread that allows the Client receive messages
         self.rcv = threading.Thread(target=self.receive) 
         self.rcv.start()
  
-    def layout(self, name):
-        
-        self.name = name
-        # to show chat window
+    # Chat interface
+    def chat(self, name):
+
+        # Chat Window
         self.Window.deiconify()
         self.Window.title("CHATROOM")
-        self.Window.resizable(width=True,
-                              height=True)
-        self.Window.configure(width=600,
-                              height=620,
-                              bg="#17202A")
-        self.labelHead = Label(self.Window,
-                               bg="#17202A",
-                               fg="#EAECEE",
-                               text=f"{self.name}",
-                               font="Helvetica 13 bold",
-                               pady=5)
- 
-        self.labelHead.place(relwidth=1)
-        self.line = Label(self.Window,
-                          width=450,
-                          bg="#ABB2B9")
- 
-        self.line.place(relwidth=1,
-                        rely=0.07,
-                        relheight=0.012)
- 
-        self.textCons = Text(self.Window,
-                             width=20,
-                             height=2,
-                             bg="#17202A",
-                             fg="#EAECEE",
-                             font="Helvetica 14",
-                             padx=5,
-                             pady=5)
- 
-        self.textCons.place(relheight=0.745,
-                            relwidth=1,
-                            rely=0.08)
- 
-        self.labelBottom = Label(self.Window,
-                                 bg="#ABB2B9",
-                                 height=80)
- 
-        self.labelBottom.place(relwidth=1,
-                               rely=0.825)
- 
-        self.entryMsg = Entry(self.labelBottom,
-                              bg="#2C3E50",
-                              fg="#EAECEE",
-                              font="Helvetica 13")
+        self.Window.resizable(width=False, height=False)
+        self.Window.configure(width=600, height=620, bg="#17202A")
 
-        self.entryMsg.bind('<Return>', lambda event: self.sendButton(self.entryMsg.get()))
- 
-        # place the given widget
-        self.entryMsg.place(relwidth=0.74,
-                            relheight=0.06,
-                            rely=0.008,
-                            relx=0.011)
- 
-        self.entryMsg.focus()
- 
-        # create a Send Button
-        self.buttonMsg = Button(self.labelBottom,
-                                text="Send",
-                                font="Helvetica 10 bold",
-                                width=20,
-                                bg="#ABB2B9",
-                                command=lambda: self.sendButton(self.entryMsg.get()))
- 
-        self.buttonMsg.place(relx=0.77,
-                             rely=0.008,
-                             relheight=0.06,
-                             relwidth=0.22)
- 
-        self.textCons.config(cursor="arrow")
+        # Chat Header
+        self.name = name
+        self.header = Label(self.Window, bg="#17202A", fg="#EAECEE", text=f"{self.name}", font="Helvetica 13 bold", pady=5)
+        self.header.place(relwidth=1)
+        
+        # Chat Body
+        self.line = Label(self.Window, width=450, bg="#ABB2B9")
+        self.line.place(relwidth=1, rely=0.07, relheight=0.05)
+        self.windowText = Text(self.Window, width=20, height=2, bg="#17202A", fg="#EAECEE", font="Helvetica 14", padx=5, pady=5)
+        self.windowText.place(relheight=0.810, relwidth=1, rely=0.08)
+        self.windowText.config(cursor="arrow")
+        self.windowText.config(state=DISABLED)
 
-        scrollbar = Scrollbar(self.textCons)
+        ## Chat Scrollbar
+        scrollbar = Scrollbar(self.windowText)
         scrollbar.place(relheight=1, relx=0.974)
-        scrollbar.config(command=self.textCons.yview)
+        scrollbar.config(command=self.windowText.yview)
+
+        # Chat Footer
+        self.footer = Label(self.Window, bg="#ABB2B9", height=80)
+        self.footer.place(relwidth=1, rely=0.890)
+
+        ## Chat Input Message
+        self.entryText = Entry(self.footer, bg="#2C3E50", fg="#EAECEE", font="Helvetica 13")
+        self.entryText.bind('<Return>', lambda event: self.sendButton(self.entryText.get()))
+        self.entryText.place(relwidth=0.74, relheight=0.03, rely=0.008, relx=0.011)
+        self.entryText.focus()
  
-        self.textCons.config(state=DISABLED)
- 
-    # function to basically start the thread for sending messages
+        ## Chat Send Text Button
+        self.sendMessageButton = Button(self.footer, text="Send", font="Roboto 14 bold", width=20, bg="#fff", highlightbackground="#fff", command=lambda: self.sendButton(self.entryText.get()))
+        self.sendMessageButton.place(relx=0.77, rely=0.008, relheight=0.03, relwidth=0.22)
+  
+    # Create the thread that allows to send messages
     def sendButton(self, msg):
-        self.textCons.config(state=DISABLED)
+        self.windowText.config(state=DISABLED)
         self.msg = msg
-        self.entryMsg.delete(0, END)
+        self.entryText.delete(0, END)
         self.snd = threading.Thread(target=self.sendMessage()) 
         self.snd.start()
  
-    # function to receive messages
+    # Function that is call by Thread that receives message
     def receive(self):
         while True:
             try:
-                message = client.recv(1024).decode()
+                message = self.client.recv(1024).decode()
                 if message != 'SendMeTheName#':
-                    # insert messages to text box
-                    self.textCons.config(state=NORMAL)
-                    self.textCons.insert(END, f'''
+
+                    # insert messages in window chat
+                    self.windowText.config(state=NORMAL)
+                    self.windowText.insert(END, f'''
                                     {message}''')
 
-                    self.textCons.config(state=DISABLED)
-                    self.textCons.see(END)
+                    self.windowText.config(state=DISABLED)
+                    self.windowText.see(END)
                 else:
-                    client.send(self.name.encode())
+                    self.client.send(self.name.encode())
             except:
                 self.isConnected = False
-                client.close()
+                self.client.close()
                 break
  
-    # function to send messages
+    # Function that is call by Thread that sends message
     def sendMessage(self):
-        self.textCons.config(state=DISABLED)
-        print(f"<{self.name}>", self.msg)
-        self.textCons.config(state=NORMAL)
-        self.textCons.insert(END, f'''
+        self.windowText.config(state=DISABLED)
+        self.windowText.config(state=NORMAL)
+        self.windowText.insert(END, f'''
                                 <{self.name}> {self.msg}''')
+        self.windowText.config(state=DISABLED)
+        self.windowText.see(END)
 
-        self.textCons.config(state=DISABLED)
-        self.textCons.see(END)
-        client.send(self.msg.encode())
- 
+        print(f"<{self.name}>", self.msg)
+        self.client.send(self.msg.encode())
 
+# Create Mural/Client instance
 mural = Mural()

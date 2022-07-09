@@ -73,7 +73,6 @@ class Bot():
 						# if clientMessage.rstrip() == '5':
 						# 	break
 					else:
-						print('fimm')
 						self.stopConnection(connection)
 				except:
 					continue
