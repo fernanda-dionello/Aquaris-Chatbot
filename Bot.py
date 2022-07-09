@@ -73,6 +73,7 @@ class Bot():
 						# if clientMessage.rstrip() == '5':
 						# 	break
 					else:
+						print('fimm')
 						self.stopConnection(connection)
 				except:
 					continue
@@ -109,25 +110,29 @@ class Bot():
 		3-	Contact Info
 		4-	Talk with students [ONLINE]
 		
-		Close Session, pressing X or ESC button
+		Close Session, pressing X button
 		========================================
 
 		Place the number of your choice: ''' # 5-	Close Session
 	
 	def invalidMessage(self, connection):
-		connection.send('Invalid choice, try again a number between 0 and 4.'.encode()) #or 5, without GUI
+		message = '''
+		Invalid choice, try again a number between 0 and 4.
+		'''
+		connection.send(message.encode()) #or 5, without GUI
 	
 	def aboutAquaris(self, connection):
-		connection.send('''
+		message = '''
 		The Aquaris swimming school was founded in 2000
 		and offers swimming lessons for children, youth,
 		adults and seniors. The structure has 5 swimming
 		pools, 1 of which is Olympic. Aquaris is federated,
 		and participates in state and national championships!
-		'''.encode())
+		'''
+		connection.send(message.encode())
 	
 	def showTeachers(self, connection):
-		connection.send('''
+		message = '''
 		=====================================
 		TEACHERS
 		=====================================
@@ -144,10 +149,11 @@ class Bot():
 		6-	Carlos Trindade
 			* Adults and Youth
 		=====================================
-		'''.encode())
+		'''
+		connection.send(message.encode())
 	
 	def classSchedules(self, connection):
-		connection.send('''
+		message = '''
 		===============================================
 		CLASS SCHEDULES
 		===============================================
@@ -188,29 +194,42 @@ class Bot():
 		7PM / 8PM - Fabiane Silva (Adults - Pool 1)   
 
 		===============================================
-		'''.encode())
+		'''
+		connection.send(message.encode())
 	
 	def contactInfo(self, connection):
-		connection.send('''
+		message = '''
 		Telephone: +16175551212
 		Whatsapp: +16175551214
 		Email: aquaris@gmail.com
-		'''.encode())
-	
-	def nickName(self, connection):
-		connection.send('''
-		What is your nickname?
-		'''.encode())
+		'''
+		connection.send(message.encode())
 	
 	def joinedTheChat(self, connection, username, quantityOnlineinChat):
-		connection.send(f'''
+		message = f'''
 		Hey {username} you are in the chat now,{quantityOnlineinChat}!
 		If you want leave the room write EXIT.
-		'''.encode())
+		'''
+		connection.send(message.encode())
 	
+	def adviseUserJoinedChat(self, username):
+		return f'''
+		{username} joined the chat!
+		'''
+	
+	def messageReceivedInChat(self, username, clientMessageForAll):
+		return f'''
+		<{username}> {clientMessageForAll}
+		'''
+	
+	def messageLeftTheRoom(self, username):
+		return f'''
+		{username} left the room.
+		'''
+
 	def talkOnline(self, connection):
-		self.nickName(connection)
 		self.addClientsOnlineInChat(connection)
+		connection.send('SendMeTheName#'.encode())
 	
 		while True:
 			try:
@@ -224,25 +243,23 @@ class Bot():
 						quantityOnlineinChat = f' with more {self.quantityClientsOnlineInChat() - 1} people'
 
 					self.joinedTheChat(connection, username, quantityOnlineinChat)					
-					self.broadcast(f"{username} joined the chat!", connection)
+					self.broadcast(self.adviseUserJoinedChat(username), connection)
 
 					while True:
 						try:
 							clientMessageForAll = connection.recv(1024).decode()
 							if clientMessageForAll:
 								if clientMessageForAll.lower().rstrip() == 'exit':
-									self.broadcast(f"{username} left the room.", connection)
+									self.broadcast(self.messageLeftTheRoom(username), connection)
 									self.removeClientsOnlineInChat(connection)
 									break
-								message = f"<{username}> " + clientMessageForAll
-								self.broadcast(message, connection)
+								self.broadcast(self.messageReceivedInChat(username, clientMessageForAll), connection)
 						except:
 							self.removeClientsConnected(connection)
 							self.removeClientsOnlineInChat(connection)
 							break
 					break
 			except:
-				print('caiu no expect')
 				self.removeClientsConnected(connection)
 				break
 	
