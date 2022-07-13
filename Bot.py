@@ -13,18 +13,23 @@ class Bot():
 
 	############### AUXILIAR FUNCTIONS ##################
 
+	# Add clients that are online and in the chat in a list
 	def addClientsOnlineInChat(self, connection):
 		self.__clientsInTheChat.append(connection)
 	
+	# Remove the client that left the chat from the list
 	def removeClientsOnlineInChat(self, connection):
 		self.__clientsInTheChat.remove(connection)
 	
+	# Remove the client that finish the connection with the Bot
 	def removeClientsConnected(self, connection):
 		self.__clientsActive.remove(connection)
 
+	# Show the quantity of clients that are online and chating with others
 	def quantityClientsOnlineInChat(self):
 		return len(self.__clientsInTheChat)
 
+	# Validate the message that was received
 	def validateMessage(self, clientMessage, connection):
 		try:
 			if clientMessage == 'exit':
@@ -45,6 +50,7 @@ class Bot():
 
 	############### START AND CLOSE CONNECTIONS ##################
 
+	# Start the bot
 	def startBot(self):
 		server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		server.bind((self.host, self.port))
@@ -61,6 +67,7 @@ class Bot():
 			# For each user is create a thread
 			start_new_thread(self.clientConnection,(connection,id))
 
+	# Controls the client connection and the messages received
 	def clientConnection(self, connection, id):
 		connection.send(self.firstMessage().encode())
 		while True:
@@ -70,13 +77,12 @@ class Bot():
 
 					if clientMessage:
 						self.validateMessage(clientMessage.rstrip(), connection)
-						# if clientMessage.rstrip() == '5':
-						# 	break
 					else:
 						self.stopConnection(connection)
 				except:
 					continue
 	
+	# Allows doing broadcast that is used in chat with other students
 	def broadcast(self, message, connection):
 		for client in self.__clientsInTheChat:
 			if client != connection:
@@ -85,10 +91,13 @@ class Bot():
 				except:
 					self.stopConnection(client)
 	
+	# Stop the connection
 	def stopConnection(self, connection):
 		if connection in self.__clientsActive:
 			connection.close()
 			self.removeClientsConnected(connection)
+			print("Clients connected: ", len(self.__clientsActive))
+			
 
 
 	############### MESSAGES ##################
@@ -226,6 +235,7 @@ class Bot():
 		{username} left the room.
 		'''
 
+	# Controls the chat with other students (broadcast/multicast)
 	def talkOnline(self, connection):
 		self.addClientsOnlineInChat(connection)
 		connection.send('SendMeTheName#'.encode())
@@ -251,8 +261,14 @@ class Bot():
 								if clientMessageForAll.lower().rstrip() == 'exit':
 									self.broadcast(self.messageLeftTheRoom(username), connection)
 									self.removeClientsOnlineInChat(connection)
+									self.stopConnection(connection)
 									break
 								self.broadcast(self.messageReceivedInChat(username, clientMessageForAll), connection)
+							else:
+								self.broadcast(self.messageLeftTheRoom(username), connection)
+								self.removeClientsOnlineInChat(connection)
+								self.stopConnection(connection)
+								break
 						except:
 							self.removeClientsConnected(connection)
 							self.removeClientsOnlineInChat(connection)

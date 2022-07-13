@@ -5,6 +5,7 @@ from tkinter import *
 from tkinter import messagebox
 from tkmacosx import Button
 
+# The Mural contemplates the mural interface, the cliente and login screen
 class Mural():
 
     def __init__(self):
@@ -14,7 +15,6 @@ class Mural():
         self.Window.withdraw()
         self.Window.protocol("WM_DELETE_WINDOW", self.on_closing)
         
-
         # Login screen override the current Window
         self.login = Toplevel()
         self.login.title("Aquaris")
@@ -60,7 +60,6 @@ class Mural():
         self.ADDRESS = (self.SERVER, self.PORT)
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
         self.Window.mainloop()
-
 
     # Close client connection and chat
     def on_closing(self):
@@ -140,7 +139,6 @@ class Mural():
             try:
                 message = self.client.recv(1024).decode()
                 if message != 'SendMeTheName#':
-
                     # insert messages in window chat
                     self.windowText.config(state=NORMAL)
                     self.windowText.insert(END, f'''
