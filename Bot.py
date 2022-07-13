@@ -261,7 +261,6 @@ class Bot():
 								if clientMessageForAll.lower().rstrip() == 'exit':
 									self.broadcast(self.messageLeftTheRoom(username), connection)
 									self.removeClientsOnlineInChat(connection)
-									self.stopConnection(connection)
 									break
 								self.broadcast(self.messageReceivedInChat(username, clientMessageForAll), connection)
 							else:
