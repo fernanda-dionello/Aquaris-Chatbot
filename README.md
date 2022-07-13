@@ -14,6 +14,7 @@ Chatbot created for a swimming school that allows students to access a menu of o
 ![architecture drawio](https://user-images.githubusercontent.com/74319133/178811579-d74ef94a-5f74-4cc9-90df-639b0ae18cf9.png)
 
 In Mural entity, we have the client and login interface. The login page starts first and we just connect to the server (Bot) when we press the send button in login and we're able to see the chat interface. In the client we have 2 threads, one to receive messages and another to send messages for the Bot (Server). At the same time, when we create the client connection this starts another Thread in server side for each client connected.
+
 Ps: We can connect multiple clients at same time. In addition, all the clients can communicate in real time with a broadcast/multicast system when the chose the option in menu to talk with other students.
 
 ## Screens
